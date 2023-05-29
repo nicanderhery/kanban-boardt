@@ -1,47 +1,23 @@
 """
 The main python program to run the kanban bot.
 """
+import importlib
 import os
 
-import discord
-from dotenv import load_dotenv
+from client import client
+from utils import BOT_TOKEN
 
-# Load environment variables from .env file
-load_dotenv()
+if not BOT_TOKEN:
+    raise ValueError('BOT_TOKEN environment variable is not set.')
 
-# Access environment variables
-BOT_TOKEN = os.getenv('BOT_TOKEN')
+# Load all commands inside the commands folder
+module_names = [f[:-3] for f in os.listdir('commands') if f.endswith('.py')]
+for module_name in module_names:
+    module = importlib.import_module(f'commands.{module_name}')
 
-# Check if environment variables are set
-if BOT_TOKEN is None:
-    raise ValueError('BOT_TOKEN environment variable not set.')
-
-intents = discord.Intents.default()
-intents.message_content = True
-
-client = discord.Client(intents=intents)
-
-
-@client.event
-async def on_ready():
-    """
-    This event is called when the bot has finished logging in and setting things up.
-    """
-    print(f'We have logged in as {client.user}')
-
-
-@client.event
-async def on_message(message: discord.Message):
-    """
-    This event is called when a message is sent in a channel the bot can see.
-
-    Args:
-        message (_type_): _description_
-    """
-    if message.author == client.user:
-        return
-
-    if message.content.startswith('$hello'):
-        await message.channel.send(f'Hello! {message.author.mention}')
+# Load all events inside the events folder
+module_names = [f[:-3] for f in os.listdir('events') if f.endswith('.py')]
+for module_name in module_names:
+    module = importlib.import_module(f'events.{module_name}')
 
 client.run(BOT_TOKEN)
